@@ -1,0 +1,239 @@
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-center">Корзина</h2>
+                </div>
+                <div class="card-body">
+                    <% if (cartItems.length === 0) { %>
+                        <div class="alert alert-info">
+                            <p class="mb-0">Ваша корзина порожня</p>
+                        </div>
+                        <div class="text-center">
+                            <a href="/tickets" class="btn btn-primary">
+                                <i class="bi bi-ticket-perforated"></i> Переглянути вистави
+                            </a>
+                        </div>
+                    <% } else { %>
+                        <div class="alert alert-info mb-4">
+                            <i class="bi bi-info-circle"></i> Оплата квитків здійснюється в касі театру
+                        </div>
+                        
+                        <% cartItems.forEach((item, index) => { %>
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <h5 class="card-title"><%= item.performance.title %></h5>
+                                            <p class="mb-1">
+                                                <i class="bi bi-calendar-event"></i>
+                                                <span class="performance-date" data-date="<%= item.performance.date.toISOString() %>"></span>
+                                                о <%= item.performance.time %>
+                                            </p>
+                                            <p class="mb-1">
+                                                <i class="bi bi-geo-alt"></i>
+                                                <%= item.performance.venue %>
+                                            </p>
+                                            <div class="mt-2">
+                                                <strong>Вибрані місця:</strong>
+                                                <div class="seats-list">
+                                                    <% item.seats.forEach(seat => { %>
+                                                        <span class="badge bg-primary me-2">
+                                                            Ряд <%= seat.row %>, Місце <%= seat.seat %>
+                                                        </span>
+                                                    <% }); %>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <p class="mb-2">
+                                                <strong>Ціна за квиток:</strong> <%= item.performance.ticketPrice %> грн
+                                            </p>
+                                            <p class="mb-3">
+                                                <strong>Всього:</strong> <%= item.performance.ticketPrice * item.seats.length %> грн
+                                            </p>
+                                            <% if (!item.isPaid) { %>
+                                                <button class="btn btn-success btn-sm toggle-payment" data-index="<%= index %>">
+                                                    <i class="bi bi-cash"></i> Оплатити
+                                                </button>
+                                                <button onclick="removeFromCart(<%= index %>)" class="btn btn-danger btn-sm">
+                                                    <i class="bi bi-trash"></i> Видалити
+                                                </button>
+                                            <% } else { %>
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle"></i> Оплачено
+                                                </span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+
+                                    <div class="payment-section" id="paymentSection<%= index %>" style="display: none;">
+                                        <hr class="my-4">
+                                        <form class="payment-form" onsubmit="return simulatePayment(event, <%= index %>)">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Номер карти</label>
+                                                    <input type="text" class="form-control" placeholder="•••• •••• •••• ••••" required>
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label">Термін дії</label>
+                                                    <input type="text" class="form-control" placeholder="ММ/РР" required>
+                                                </div>
+                                                <div class="col-md-3 mb-3">
+                                                    <label class="form-label">CVV</label>
+                                                    <input type="password" class="form-control" placeholder="•••" required>
+                                                </div>
+                                            </div>
+                                            <div class="text-end mt-3">
+                                                <button type="button" class="btn btn-secondary me-2 cancel-payment" data-index="<%= index %>">
+                                                    Скасувати
+                                                </button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    Оплатити <%= item.performance.ticketPrice * item.seats.length %> грн
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                        
+                        <div class="card mt-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Загальна сума:</h5>
+                                    <h5 class="mb-0"><%= total %> грн</h5>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <% const hasUnpaidItems = cartItems.some(item => !item.isPaid); %>
+                            <% if (hasUnpaidItems) { %>
+                                <a href="/cart/clear" class="btn btn-secondary">
+                                    <i class="bi bi-trash"></i> Очистити корзину
+                                </a>
+                            <% } %>
+                            <a href="/tickets" class="btn btn-primary">
+                                <i class="bi bi-ticket-perforated"></i> Продовжити вибір квитків
+                            </a>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.performance-date').forEach(dateElement => {
+        const date = new Date(dateElement.dataset.date);
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        dateElement.textContent = date.toLocaleDateString('uk-UA', options);
+    });
+
+    document.querySelectorAll('.toggle-payment').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const index = button.dataset.index;
+            const paymentSection = document.getElementById(`paymentSection${index}`);
+            
+            document.querySelectorAll('.payment-section').forEach(section => {
+                if (section.id !== `paymentSection${index}`) {
+                    section.style.display = 'none';
+                }
+            });
+
+            if (paymentSection.style.display === 'none') {
+                paymentSection.style.display = 'block';
+                paymentSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                paymentSection.style.display = 'none';
+            }
+        });
+    });
+
+    document.querySelectorAll('.cancel-payment').forEach(button => {
+        button.addEventListener('click', () => {
+            const paymentSection = document.getElementById(`paymentSection${button.dataset.index}`);
+            paymentSection.style.display = 'none';
+        });
+    });
+});
+
+async function simulatePayment(event, index) {
+    event.preventDefault();
+    
+    try {
+        const response = await fetch(`/cart/pay/${index}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            const paymentSection = document.getElementById(`paymentSection${index}`);
+            paymentSection.style.display = 'none';
+
+            const payButton = document.querySelector(`[data-index="${index}"].toggle-payment`);
+            const actionContainer = payButton.parentElement;
+            actionContainer.innerHTML = `
+                <span class="badge bg-success">
+                    <i class="bi bi-check-circle"></i> Оплачено
+                </span>
+            `;
+
+            const unpaidItems = document.querySelectorAll('.toggle-payment').length - 1;
+            window.updateGlobalCartCount(unpaidItems);
+
+            if (unpaidItems === 0) {
+                const clearCartButton = document.querySelector('a[href="/cart/clear"]');
+                if (clearCartButton) {
+                    clearCartButton.remove();
+                }
+            }
+        } else {
+            throw new Error(data.error || 'Помилка при оплаті');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Помилка при оплаті квитка');
+    }
+
+    return false;
+}
+
+async function removeFromCart(index) {
+    try {
+        const response = await fetch(`/cart/remove/${index}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            window.updateGlobalCartCount(data.cartCount);
+            window.location.reload();
+        } else {
+            throw new Error(data.error || 'Помилка при видаленні');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert(error.message || 'Помилка при видаленні з корзини');
+    }
+}
+</script>

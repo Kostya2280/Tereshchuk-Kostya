@@ -1,0 +1,342 @@
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-center">Бронювання квитків</h2>
+                </div>
+                <div class="card-body">
+                    <% if (error) { %>
+                        <div class="alert alert-danger" role="alert">
+                            <%= error %>
+                        </div>
+                    <% } %>
+
+                    <div class="performance-info mb-4">
+                        <h3><%= performance.title %></h3>
+                        <p>
+                            <i class="bi bi-calendar-event"></i>
+                            <span class="performance-date" data-date="<%= performance.date.toISOString() %>"></span>
+                            о <%= performance.time %>
+                        </p>
+                        <p><i class="bi bi-geo-alt"></i> <%= performance.venue %></p>
+                        <p><i class="bi bi-cash"></i> Ціна за квиток: <%= performance.ticketPrice %> грн</p>
+                    </div>
+
+                    <form id="bookingForm" onsubmit="return handleSubmit(event)">
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Прізвище та ім'я*</label>
+                            <input type="text" class="form-control" id="fullName" name="fullName" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Кількість квитків*</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity" 
+                                   min="1" max="10" value="1" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Виберіть місця*</label>
+                            <div class="seat-map-container">
+                                <div class="stage mb-4 text-center p-3 bg-dark text-white">
+                                    СЦЕНА
+                                </div>
+                                <div class="seat-map" id="seatMap">
+                                </div>
+                                <div class="seat-legend mt-3">
+                                    <div class="d-flex justify-content-center gap-4">
+                                        <div>
+                                            <span class="seat available"></span> Вільне
+                                        </div>
+                                        <div>
+                                            <span class="seat selected"></span> Вибране
+                                        </div>
+                                        <div>
+                                            <span class="seat booked"></span> Заброньоване
+                                        </div>
+                                        <div>
+                                            <span class="seat paid"></span> Продано
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="selectedSeats" id="selectedSeats">
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="bi bi-cart-plus"></i> Додати в корзину
+                            </button>
+                            <a href="/tickets" class="btn btn-secondary ms-2">
+                                <i class="bi bi-x-circle"></i> Скасувати
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.seat-map-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stage {
+    width: 80%;
+    margin: 0 auto 30px;
+    border-radius: 100px 100px 0 0;
+    background-color: #343a40;
+    color: white;
+    padding: 15px;
+    text-align: center;
+}
+
+.seat-map {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.row-label {
+    width: 50px;
+    text-align: right;
+    margin-right: 15px;
+    font-weight: bold;
+}
+
+.seat-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    padding: 5px 0;
+}
+
+.seat {
+    width: 30px;
+    height: 30px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    background: white;
+}
+
+.seat.available:hover {
+    transform: scale(1.1);
+    background: #e9ecef;
+}
+
+.seat.selected {
+    background: #007bff;
+    border-color: #0056b3;
+    color: white;
+    transform: scale(1.1);
+}
+
+.seat.booked {
+    background: #dc3545;
+    border-color: #dc3545;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.seat.paid {
+    background: #6c757d;
+    border-color: #5a6268;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.seat-legend {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #dee2e6;
+}
+
+.seat-legend .seat {
+    margin: 0 5px;
+    cursor: default;
+}
+
+.seat-legend .seat:hover {
+    transform: none;
+}
+</style>
+
+<script>
+let selectedSeats = [];
+let form;
+let quantityInput;
+let selectedSeatsInput;
+let submitBtn;
+
+document.addEventListener('DOMContentLoaded', () => {
+    form = document.getElementById('bookingForm');
+    quantityInput = document.getElementById('quantity');
+    selectedSeatsInput = document.getElementById('selectedSeats');
+    submitBtn = document.getElementById('submitBtn');
+    const seatMap = document.getElementById('seatMap');
+
+    const seats = JSON.parse('<%- JSON.stringify(performance.seats) %>');
+    const cartItems = JSON.parse('<%- JSON.stringify(cartItems || []) %>');
+    const SEATS_PER_ROW = 25;
+    const TOTAL_ROWS = 20;
+
+    function isSeatInCart(row, seat) {
+        return cartItems.some(item => 
+            item.seats.some(s => s.row === row && s.seat === seat)
+        );
+    }
+
+    for (let row = 1; row <= TOTAL_ROWS; row++) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'seat-row mb-2';
+        
+        const rowLabel = document.createElement('div');
+        rowLabel.className = 'row-label';
+        rowLabel.textContent = `${row}`;
+        rowDiv.appendChild(rowLabel);
+
+        for (let seat = 1; seat <= SEATS_PER_ROW; seat++) {
+            const seatIndex = (row - 1) * SEATS_PER_ROW + (seat - 1);
+            const seatDiv = document.createElement('div');
+            
+            const isInCart = isSeatInCart(row, seat);
+            const isBooked = seats[seatIndex].isBooked;
+            const isPaid = seats[seatIndex].isPaid;
+
+            seatDiv.className = `seat ${isBooked || isInCart || isPaid ? 'booked' : 'available'}`;
+            if (isPaid) {
+                seatDiv.classList.add('paid');
+            }
+            
+            seatDiv.dataset.row = row;
+            seatDiv.dataset.seat = seat;
+            seatDiv.title = `Ряд ${row}, Місце ${seat}`;
+            seatDiv.textContent = seat;
+
+            if (!isBooked && !isInCart && !isPaid) {
+                seatDiv.addEventListener('click', () => toggleSeat(seatDiv));
+            }
+
+            rowDiv.appendChild(seatDiv);
+        }
+        seatMap.appendChild(rowDiv);
+    }
+
+    quantityInput.addEventListener('change', () => {
+        const newQuantity = parseInt(quantityInput.value);
+        if (selectedSeats.length > newQuantity) {
+            const extraSeats = selectedSeats.slice(newQuantity);
+            extraSeats.forEach(seatInfo => {
+                const seatElement = document.querySelector(
+                    `.seat[data-row="${seatInfo.row}"][data-seat="${seatInfo.seat}"]`
+                );
+                if (seatElement) {
+                    seatElement.classList.remove('selected');
+                    seatElement.classList.add('available');
+                }
+            });
+            selectedSeats = selectedSeats.slice(0, newQuantity);
+        }
+        updateForm();
+    });
+
+    const dateElement = document.querySelector('.performance-date');
+    const date = new Date(dateElement.dataset.date);
+    const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    };
+    dateElement.textContent = date.toLocaleDateString('uk-UA', options);
+
+    updateForm();
+});
+
+function toggleSeat(seatElement) {
+    const row = parseInt(seatElement.dataset.row);
+    const seat = parseInt(seatElement.dataset.seat);
+    const seatInfo = { row, seat };
+
+    if (seatElement.classList.contains('selected')) {
+        seatElement.classList.remove('selected');
+        seatElement.classList.add('available');
+        selectedSeats = selectedSeats.filter(s => !(s.row === row && s.seat === seat));
+    } else {
+        if (selectedSeats.length < parseInt(quantityInput.value)) {
+            seatElement.classList.remove('available');
+            seatElement.classList.add('selected');
+            selectedSeats.push(seatInfo);
+        }
+    }
+
+    updateForm();
+}
+
+function updateForm() {
+    selectedSeatsInput.value = JSON.stringify(selectedSeats);
+    submitBtn.disabled = selectedSeats.length !== parseInt(quantityInput.value);
+}
+
+async function handleSubmit(e) {
+    e.preventDefault();
+    
+    const quantity = parseInt(quantityInput.value);
+    if (selectedSeats.length !== quantity) {
+        alert('Будь ласка, виберіть всі місця відповідно до кількості квитків');
+        return false;
+    }
+
+    try {
+        const response = await fetch('/cart/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                performanceId: '<%= performance._id %>',
+                seats: selectedSeats
+            })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Помилка при додаванні в корзину');
+        }
+
+        if (data.success) {
+            // Update cart count using the global function
+            window.updateGlobalCartCount(data.cartCount);
+            
+            // Redirect to cart
+            window.location.href = '/cart';
+        } else {
+            throw new Error(data.error || 'Невідома помилка');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert(error.message || 'Помилка при додаванні в корзину');
+    }
+
+    return false;
+}
+</script>

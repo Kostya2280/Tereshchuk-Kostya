@@ -1,0 +1,144 @@
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="text-center">Редагувати виставу</h2>
+                </div>
+                <div class="card-body">
+                    <% if (error) { %>
+                        <div class="alert alert-danger" role="alert">
+                            <%= error %>
+                        </div>
+                    <% } %>
+                    <form action="/admin/performances/edit/<%= performance._id %>" method="POST" id="performanceForm">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Назва вистави*</label>
+                            <input type="text" class="form-control" id="title" name="title" required 
+                                   value="<%= performance.title %>">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date" class="form-label">Дата*</label>
+                                <input type="date" class="form-control" id="date" name="date" required
+                                       value="<%= performance.date.toISOString().split('T')[0] %>">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="time" class="form-label">Час*</label>
+                                <input type="time" class="form-control" id="time" name="time" required
+                                       value="<%= performance.time %>">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="venue" class="form-label">Місце проведення*</label>
+                            <input type="text" class="form-control" id="venue" name="venue" required
+                                   value="<%= performance.venue %>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Артисти</label>
+                            <div id="artistsList" class="mb-2">
+                                <% performance.artists.forEach((artist, index) => { %>
+                                    <div class="row mb-2 artist-entry">
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control artist-name" 
+                                                   placeholder="Ім'я артиста" required
+                                                   value="<%= artist.name %>">
+                                        </div>
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control artist-role" 
+                                                   placeholder="Роль" required
+                                                   value="<%= artist.role %>">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-danger" onclick="removeArtist(this)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            </div>
+                            <button type="button" class="btn btn-secondary" onclick="addArtist()">
+                                <i class="bi bi-plus-circle"></i> Додати артиста
+                            </button>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="program" class="form-label">Програма*</label>
+                            <textarea class="form-control" id="program" name="program" rows="4" required><%= performance.program %></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ticketPrice" class="form-label">Ціна квитка (грн)*</label>
+                            <input type="number" class="form-control" id="ticketPrice" name="ticketPrice" 
+                                   min="0" step="1" required value="<%= performance.ticketPrice %>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="imageUrl" class="form-label">URL зображення</label>
+                            <input type="url" class="form-control" id="imageUrl" name="imageUrl" 
+                                   placeholder="https://example.com/image.jpg"
+                                   value="<%= performance.imageUrl %>">
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Зберегти зміни
+                            </button>
+                            <a href="/performances" class="btn btn-secondary ms-2">
+                                <i class="bi bi-x-circle"></i> Скасувати
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const artistCount = '<%= performance.artists.length %>';
+
+function addArtist() {
+    const artistsList = document.getElementById('artistsList');
+    const artistDiv = document.createElement('div');
+    artistDiv.className = 'row mb-2 artist-entry';
+    artistDiv.innerHTML = `
+        <div class="col-md-5">
+            <input type="text" class="form-control artist-name" placeholder="Ім'я артиста" required>
+        </div>
+        <div class="col-md-5">
+            <input type="text" class="form-control artist-role" placeholder="Роль" required>
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-danger" onclick="removeArtist(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    `;
+    artistsList.appendChild(artistDiv);
+}
+
+function removeArtist(button) {
+    button.closest('.artist-entry').remove();
+}
+
+document.getElementById('performanceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const artistEntries = document.querySelectorAll('.artist-entry');
+    const artists = Array.from(artistEntries).map(entry => {
+        return {
+            name: entry.querySelector('.artist-name').value,
+            role: entry.querySelector('.artist-role').value
+        };
+    });
+
+    const artistsInput = document.createElement('input');
+    artistsInput.type = 'hidden';
+    artistsInput.name = 'artists';
+    artistsInput.value = JSON.stringify(artists);
+    this.appendChild(artistsInput);
+    this.submit();
+});</script>

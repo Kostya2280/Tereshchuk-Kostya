@@ -1,0 +1,29 @@
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="text-center">Афіша оперних вистав</h1>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    <% performances.forEach(performance => { %>
+        <div class="col">
+            <div class="card h-100">
+                <img src="<%= performance.imageUrl %>" class="card-img-top" alt="<%= performance.title %>">
+                <div class="card-body">
+                    <h5 class="card-title"><%= performance.title %></h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Композитор: <%= performance.composer %></h6>
+                    <p class="card-text"><%= performance.description %></p>
+                    <ul class="list-unstyled">
+                        <li><strong>Дата:</strong> <span class="performance-date" data-date="<%= performance.date.toISOString() %>"></span></li>
+                        <li><strong>Час:</strong> <%= performance.time %></li>
+                        <li><strong>Місце:</strong> <%= performance.venue %></li>
+                        <li><strong>Ціна:</strong> <%= performance.price %> грн</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary w-100">Купити квиток</button>
+                </div>
+            </div>
+        </div>
+    <% }); %>
+</div>
