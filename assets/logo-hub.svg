@@ -8,7 +8,9 @@
   <g fill="url(#ej-grad)">
     <path id="ej-left" d="M33.2 50 L27.5 50 L0 25.6 L27.2 1.4 L39.8 1.3 L12.4 25.6 L18.5 30.9 L30.2 20.4 L36 25.1 L36.6 25.6 L36 26.1 L24.7 36.3 L30.4 41.8 L53.6 20.8 L54.4 20.8 L60.4 25.5 Z"/>
     <path id="ej-right" d="M58.5 0 L85.3 24.2 L58.2 48.4 L46.3 48.5 L73.3 24.2 L55.6 8.3 L43.6 19.2 L37.2 13.8 L52.5 0 Z"/>
-    <!-- HUB -->
+  </g>
+  <!-- HUB: білі літери з чорною обводкою -->
+  <g fill="#fff" stroke="#000" stroke-width="2" stroke-linejoin="round" paint-order="stroke">
     <path id="hub-h" d="M98 10 H105 V21.5 H115 V10 H122 V40 H115 V28.5 H105 V40 H98 Z"/>
     <path id="hub-u" d="M128 10 H135 V33 H145 V10 H152 V34 L146 40 H134 L128 34 Z"/>
     <path id="hub-b" fill-rule="evenodd" d="M158 10 H174 L179 15 V21 L176.5 25 L180 29 V35 L175 40 H158 Z M165 17 V22 H172 V17 Z M165 28 V33 H173 V28 Z"/>

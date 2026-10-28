@@ -46,7 +46,7 @@
     .hub-u { animation-delay: 1.82s; }
     .hub-b { animation-delay: 1.94s; }
     .hub-letter .ej-glow { animation: ej-pulse 2.4s ease-in-out 2.4s infinite; opacity: .35; }
-    .hub-letter .ej-fill, .hub-letter .ej-shine { animation: none; opacity: 1; }
+    .hub-letter .ej-fill { animation: none; opacity: 1; fill: #fff; stroke: #000; stroke-width: 2; stroke-linejoin: round; paint-order: stroke; }
 
     @keyframes hub-in { from { opacity: 0; transform: translate(-10px, 0); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
     @keyframes ej-in-l { from { transform: translateX(-14px); opacity: 0; } 30% { opacity: 1; } }
@@ -84,17 +84,14 @@
     <g class="hub-letter hub-h">
       <use href="#hub-h" xlink:href="#hub-h" class="ej-glow"/>
       <use href="#hub-h" xlink:href="#hub-h" class="ej-fill"/>
-      <use href="#hub-h" xlink:href="#hub-h" class="ej-shine"/>
     </g>
     <g class="hub-letter hub-u">
       <use href="#hub-u" xlink:href="#hub-u" class="ej-glow"/>
       <use href="#hub-u" xlink:href="#hub-u" class="ej-fill"/>
-      <use href="#hub-u" xlink:href="#hub-u" class="ej-shine"/>
     </g>
     <g class="hub-letter hub-b">
       <use href="#hub-b" xlink:href="#hub-b" class="ej-glow"/>
       <use href="#hub-b" xlink:href="#hub-b" class="ej-fill"/>
-      <use href="#hub-b" xlink:href="#hub-b" class="ej-shine"/>
     </g>
   </g>
 </svg>
